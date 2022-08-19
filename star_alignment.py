@@ -1,4 +1,3 @@
-from copy import deepcopy
 def global_align(x, y, s_match, s_mismatch, s_gap):
 
     A = []
@@ -110,11 +109,14 @@ def get_center(sequences):
             center_score = sum
             center = scores
     alignments_needed = {}
-    for i in sequences:
-        if i != sequences[center]:
-            s1,s2,sc = global_align(i, sequences[center],3,-1,-2)
-            alignments_needed[sequences.index(i)] = (s2,s1,sc)
+    #print(score_matrix[center])
+    for i in range(len(sequences)):
+        #print(i)
+        if i != center:
+            s1,s2,sc = global_align(sequences[i], sequences[center],3,-1,-2)
+            alignments_needed[i] = (s2,s1,sc)
     #print(score_matrix)
+    #print(alignments_needed)
     return center, alignments_needed
 
 def align_gaps(seq1, seq2, aligneds, new):
@@ -216,7 +218,8 @@ def block_optimization(results, score):
                 i = counter
             else:
                 i+=1
-        #print(blocks)
+        #print(results)
+
         seq_blocks = []
         for b in blocks:
             block = []
@@ -225,22 +228,27 @@ def block_optimization(results, score):
                 block.append(nseq.replace("-",""))
             if "" not in block:
                 seq_blocks.append(block)
+        #print(seq_blocks)
         block = seq_blocks[0]
         counter = 0
         for block in seq_blocks:
 
             center, alignments = get_center(block)
             aligneds, center_seq = msa(alignments)
+            # print(block)
+            # print(aligneds)
+            # print(alignments)
             res = order_results(aligneds, center_seq, center)
 
             index = seq_blocks.index(block)
             #print(res)
             news = []
-            for sequence in results:
-                news.append(sequence[:blocks[index][0]]+res[results.index(sequence)]+sequence[blocks[index][1]+1:])
+            for i in range(len(results)):
+                news.append(results[i][:blocks[index][0]]+res[i]+results[i][blocks[index][1]+1:])
 
             if calculate_scores(news) > score:
                 results = news
+                #print("it actually worked")
                 break
             counter+=1
 
@@ -257,8 +265,8 @@ if __name__ == '__main__':
     #print(alignments)
     results = order_results(aligneds, center_seq, center)
     results, score = block_optimization(results,calculate_scores(results))
-    print(calculate_scores(results))
-    #print(score)
+    #print(calculate_scores(results))
+    print(score)
     for i in results:
         print(i)
 
